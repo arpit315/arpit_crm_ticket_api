@@ -5,9 +5,9 @@ target/
 .idea/
 *.iml
 
-# Logs
-logs/
-*.log
+# VS Code
+.vscode/
 
-# OS files
-.DS_Store
+# Logs
+*.log
+logs/
