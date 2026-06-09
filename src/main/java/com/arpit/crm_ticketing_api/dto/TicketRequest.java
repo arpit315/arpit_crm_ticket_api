@@ -1,0 +1,25 @@
+package com.arpit.crm_ticketing_api.dto;
+
+import com.arpit.crm_ticketing_api.enums.Priority;
+import com.arpit.crm_ticketing_api.enums.TicketStatus;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class TicketRequest {
+    @NotBlank
+    private String title;
+
+    private String description;
+
+    @NotNull
+    private Priority priority;
+
+    @NotNull
+    private TicketStatus status;
+
+    private Long assignedAgentId;
+}
