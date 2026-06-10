@@ -5,6 +5,7 @@ import com.arpit.crm_ticketing_api.dto.AgentResponse;
 import com.arpit.crm_ticketing_api.service.AgentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +19,7 @@ public class AgentController {
 
     @PostMapping
     public ResponseEntity<AgentResponse> create(@Valid @RequestBody AgentRequest request) {
-        return ResponseEntity.ok(agentService.create(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(agentService.create(request));
     }
 
     @GetMapping

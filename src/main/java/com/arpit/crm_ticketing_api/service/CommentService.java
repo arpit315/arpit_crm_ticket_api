@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -26,38 +25,70 @@ public class CommentService {
     private final TicketDao ticketDao;
     private final AgentDao agentDao;
 
-    @Transactional
     public CommentResponse create(CommentRequest request) {
-        log.info("Creating comment for ticketId={} by agentId={}", request.getTicketId(), request.getAgentId());
-        Ticket ticket = ticketDao.findById(request.getTicketId());
-        if (ticket == null) {
-            throw new ResourceNotFoundException("Ticket not found with id: " + request.getTicketId());
+        if (request == null) {
+            throw new IllegalArgumentException("Comment request must not be null");
         }
-        Agent agent = agentDao.findById(request.getAgentId());
-        if (agent == null) {
-            throw new ResourceNotFoundException("Agent not found with id: " + request.getAgentId());
+        if (request.getTicketId() == null || request.getTicketId() <= 0) {
+            throw new IllegalArgumentException("Ticket id must be a positive number");
         }
-        Comment comment = new Comment();
-        comment.setMessage(request.getMessage());
-        comment.setTicket(ticket);
-        comment.setAgent(agent);
-        return toResponse(commentDao.save(comment));
+        if (request.getAgentId() == null || request.getAgentId() <= 0) {
+            throw new IllegalArgumentException("Agent id must be a positive number");
+        }
+
+        try {
+            log.info("Creating comment for ticketId={} by agentId={}", request.getTicketId(), request.getAgentId());
+            Ticket ticket = ticketDao.findById(request.getTicketId());
+            if (ticket == null) {
+                throw new ResourceNotFoundException("Ticket not found with id: " + request.getTicketId());
+            }
+            Agent agent = agentDao.findById(request.getAgentId());
+            if (agent == null) {
+                throw new ResourceNotFoundException("Agent not found with id: " + request.getAgentId());
+            }
+            Comment comment = new Comment();
+            comment.setMessage(request.getMessage());
+            comment.setTicket(ticket);
+            comment.setAgent(agent);
+            return toResponse(commentDao.save(comment));
+        } catch (ResourceNotFoundException e) {
+            log.error("Comment creation failed for ticketId={} and agentId={}", request.getTicketId(), request.getAgentId(), e);
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to create comment", e);
+            throw e;
+        }
     }
 
-    @Transactional(readOnly = true)
     public List<CommentResponse> findAll() {
-        log.info("Fetching all comments");
-        return commentDao.findAll().stream().map(this::toResponse).toList();
+        try {
+            log.info("Fetching all comments");
+            return commentDao.findAll().stream().map(this::toResponse).toList();
+        } catch (Exception e) {
+            log.error("Failed to fetch all comments", e);
+            throw e;
+        }
     }
 
-    @Transactional(readOnly = true)
     public CommentResponse findById(Long id) {
-        Comment comment = commentDao.findById(id);
-        if (comment == null) {
-            throw new ResourceNotFoundException("Comment not found with id: " + id);
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("Comment id must be a positive number");
         }
-        log.info("Fetched comment with id={}", id);
-        return toResponse(comment);
+
+        try {
+            Comment comment = commentDao.findById(id);
+            if (comment == null) {
+                throw new ResourceNotFoundException("Comment not found with id: " + id);
+            }
+            log.info("Fetched comment with id={}", id);
+            return toResponse(comment);
+        } catch (ResourceNotFoundException e) {
+            log.error("Comment not found with id={}", id, e);
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to fetch comment with id={}", id, e);
+            throw e;
+        }
     }
 
     private CommentResponse toResponse(Comment comment) {

@@ -5,6 +5,7 @@ import com.arpit.crm_ticketing_api.dto.TicketResponse;
 import com.arpit.crm_ticketing_api.service.TicketService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +19,7 @@ public class TicketController {
 
     @PostMapping
     public ResponseEntity<TicketResponse> create(@Valid @RequestBody TicketRequest request) {
-        return ResponseEntity.ok(ticketService.create(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ticketService.create(request));
     }
 
     @GetMapping

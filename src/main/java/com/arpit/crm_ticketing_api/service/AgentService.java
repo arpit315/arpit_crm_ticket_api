@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -20,49 +19,94 @@ public class AgentService {
 
     private final AgentDao agentDao;
 
-    @Transactional
     public AgentResponse create(AgentRequest request) {
-        log.info("Creating agent with email={}", request.getEmail());
-        Agent agent = new Agent();
-        agent.setName(request.getName());
-        agent.setEmail(request.getEmail());
-        agent.setDepartment(request.getDepartment());
-        return toResponse(agentDao.save(agent));
+        if (request == null) {
+            throw new IllegalArgumentException("Agent request must not be null");
+        }
+
+        try {
+            log.info("Creating agent with email={}", request.getEmail());
+            Agent agent = new Agent();
+            agent.setName(request.getName());
+            agent.setEmail(request.getEmail());
+            agent.setDepartment(request.getDepartment());
+            return toResponse(agentDao.save(agent));
+        } catch (Exception e) {
+            log.error("Failed to create agent", e);
+            throw e;
+        }
     }
 
-    @Transactional(readOnly = true)
     public List<AgentResponse> findAll() {
-        log.info("Fetching all agents");
-        return agentDao.findAll().stream().map(this::toResponse).toList();
+        try {
+            log.info("Fetching all agents");
+            return agentDao.findAll().stream().map(this::toResponse).toList();
+        } catch (Exception e) {
+            log.error("Failed to fetch all agents", e);
+            throw e;
+        }
     }
 
-    @Transactional(readOnly = true)
     public AgentResponse findById(Long id) {
-        Agent agent = agentDao.findById(id);
-        if (agent == null) {
-            throw new ResourceNotFoundException("Agent not found with id: " + id);
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("Agent id must be a positive number");
         }
-        log.info("Fetched agent with id={}", id);
-        return toResponse(agent);
+
+        try {
+            Agent agent = agentDao.findById(id);
+            if (agent == null) {
+                throw new ResourceNotFoundException("Agent not found with id: " + id);
+            }
+            log.info("Fetched agent with id={}", id);
+            return toResponse(agent);
+        } catch (ResourceNotFoundException e) {
+            log.error("Agent not found with id={}", id, e);
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to fetch agent with id={}", id, e);
+            throw e;
+        }
     }
 
-    @Transactional
     public AgentResponse update(Long id, AgentRequest request) {
-        Agent existing = agentDao.findById(id);
-        if (existing == null) {
-            throw new ResourceNotFoundException("Agent not found with id: " + id);
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("Agent id must be a positive number");
         }
-        existing.setName(request.getName());
-        existing.setEmail(request.getEmail());
-        existing.setDepartment(request.getDepartment());
-        log.info("Updating agent with id={}", id);
-        return toResponse(agentDao.update(existing));
+        if (request == null) {
+            throw new IllegalArgumentException("Agent request must not be null");
+        }
+
+        try {
+            Agent existing = agentDao.findById(id);
+            if (existing == null) {
+                throw new ResourceNotFoundException("Agent not found with id: " + id);
+            }
+            existing.setName(request.getName());
+            existing.setEmail(request.getEmail());
+            existing.setDepartment(request.getDepartment());
+            log.info("Updating agent with id={}", id);
+            return toResponse(agentDao.update(existing));
+        } catch (ResourceNotFoundException e) {
+            log.error("Agent update failed for id={}", id, e);
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to update agent with id={}", id, e);
+            throw e;
+        }
     }
 
-    @Transactional
     public void delete(Long id) {
-        log.info("Deleting agent with id={}", id);
-        agentDao.delete(id);
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("Agent id must be a positive number");
+        }
+
+        try {
+            log.info("Deleting agent with id={}", id);
+            agentDao.delete(id);
+        } catch (Exception e) {
+            log.error("Failed to delete agent with id={}", id, e);
+            throw e;
+        }
     }
 
     private AgentResponse toResponse(Agent agent) {

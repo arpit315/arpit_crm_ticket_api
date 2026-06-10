@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Getter
 @Setter
@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 public class CommentResponse {
     private Long id;
     private String message;
-    private LocalDateTime createdAt;
+    private Instant createdAt;
     private Long ticketId;
     private Long agentId;
 }
