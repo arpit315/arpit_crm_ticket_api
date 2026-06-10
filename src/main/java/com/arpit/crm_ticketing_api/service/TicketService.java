@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -23,65 +22,114 @@ public class TicketService {
     private final TicketDao ticketDao;
     private final AgentDao agentDao;
 
-    @Transactional
     public TicketResponse create(TicketRequest request) {
-        log.info("Creating ticket with title={}", request.getTitle());
-        Ticket ticket = new Ticket();
-        ticket.setTitle(request.getTitle());
-        ticket.setDescription(request.getDescription());
-        ticket.setPriority(request.getPriority());
-        ticket.setStatus(request.getStatus());
-        if (request.getAssignedAgentId() != null) {
-            Agent agent = agentDao.findById(request.getAssignedAgentId());
-            if (agent == null) {
-                throw new ResourceNotFoundException("Agent not found with id: " + request.getAssignedAgentId());
-            }
-            ticket.setAssignedAgent(agent);
+        if (request == null) {
+            throw new IllegalArgumentException("Ticket request must not be null");
         }
-        return toResponse(ticketDao.save(ticket));
+
+        try {
+            log.info("Creating ticket with title={}", request.getTitle());
+            Ticket ticket = new Ticket();
+            ticket.setTitle(request.getTitle());
+            ticket.setDescription(request.getDescription());
+            ticket.setPriority(request.getPriority());
+            ticket.setStatus(request.getStatus());
+
+            if (request.getAssignedAgentId() != null) {
+                Agent agent = agentDao.findById(request.getAssignedAgentId());
+                if (agent == null) {
+                    throw new ResourceNotFoundException("Agent not found with id: " + request.getAssignedAgentId());
+                }
+                ticket.setAssignedAgent(agent);
+            }
+
+            return toResponse(ticketDao.save(ticket));
+        } catch (Exception e) {
+            log.error("Failed to create ticket", e);
+            throw e;
+        }
     }
 
-    @Transactional(readOnly = true)
     public List<TicketResponse> findAll() {
-        log.info("Fetching all tickets");
-        return ticketDao.findAll().stream().map(this::toResponse).toList();
+        try {
+            log.info("Fetching all tickets");
+            return ticketDao.findAll().stream().map(this::toResponse).toList();
+        } catch (Exception e) {
+            log.error("Failed to fetch all tickets", e);
+            throw e;
+        }
     }
 
-    @Transactional(readOnly = true)
     public TicketResponse findById(Long id) {
-        Ticket ticket = ticketDao.findById(id);
-        if (ticket == null) {
-            throw new ResourceNotFoundException("Ticket not found with id: " + id);
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("Ticket id must be a positive number");
         }
-        log.info("Fetched ticket with id={}", id);
-        return toResponse(ticket);
-    }
 
-    @Transactional
-    public TicketResponse update(Long id, TicketRequest request) {
-        Ticket existing = ticketDao.findById(id);
-        if (existing == null) {
-            throw new ResourceNotFoundException("Ticket not found with id: " + id);
-        }
-        existing.setTitle(request.getTitle());
-        existing.setDescription(request.getDescription());
-        existing.setPriority(request.getPriority());
-        existing.setStatus(request.getStatus());
-        if (request.getAssignedAgentId() != null) {
-            Agent agent = agentDao.findById(request.getAssignedAgentId());
-            if (agent == null) {
-                throw new ResourceNotFoundException("Agent not found with id: " + request.getAssignedAgentId());
+        try {
+            Ticket ticket = ticketDao.findById(id);
+            if (ticket == null) {
+                throw new ResourceNotFoundException("Ticket not found with id: " + id);
             }
-            existing.setAssignedAgent(agent);
+            log.info("Fetched ticket with id={}", id);
+            return toResponse(ticket);
+        } catch (ResourceNotFoundException e) {
+            log.error("Ticket not found with id={}", id, e);
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to fetch ticket with id={}", id, e);
+            throw e;
         }
-        log.info("Updating ticket with id={}", id);
-        return toResponse(ticketDao.update(existing));
     }
 
-    @Transactional
+    public TicketResponse update(Long id, TicketRequest request) {
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("Ticket id must be a positive number");
+        }
+        if (request == null) {
+            throw new IllegalArgumentException("Ticket request must not be null");
+        }
+
+        try {
+            Ticket existing = ticketDao.findById(id);
+            if (existing == null) {
+                throw new ResourceNotFoundException("Ticket not found with id: " + id);
+            }
+            existing.setTitle(request.getTitle());
+            existing.setDescription(request.getDescription());
+            existing.setPriority(request.getPriority());
+            existing.setStatus(request.getStatus());
+
+            if (request.getAssignedAgentId() != null) {
+                Agent agent = agentDao.findById(request.getAssignedAgentId());
+                if (agent == null) {
+                    throw new ResourceNotFoundException("Agent not found with id: " + request.getAssignedAgentId());
+                }
+                existing.setAssignedAgent(agent);
+            }
+
+            log.info("Updating ticket with id={}", id);
+            return toResponse(ticketDao.update(existing));
+        } catch (ResourceNotFoundException e) {
+            log.error("Ticket update failed for id={}", id, e);
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to update ticket with id={}", id, e);
+            throw e;
+        }
+    }
+
     public void delete(Long id) {
-        log.info("Deleting ticket with id={}", id);
-        ticketDao.delete(id);
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("Ticket id must be a positive number");
+        }
+
+        try {
+            log.info("Deleting ticket with id={}", id);
+            ticketDao.delete(id);
+        } catch (Exception e) {
+            log.error("Failed to delete ticket with id={}", id, e);
+            throw e;
+        }
     }
 
     private TicketResponse toResponse(Ticket ticket) {

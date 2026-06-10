@@ -5,6 +5,7 @@ import com.arpit.crm_ticketing_api.dto.CommentResponse;
 import com.arpit.crm_ticketing_api.service.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +19,7 @@ public class CommentController {
 
     @PostMapping
     public ResponseEntity<CommentResponse> create(@Valid @RequestBody CommentRequest request) {
-        return ResponseEntity.ok(commentService.create(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(commentService.create(request));
     }
 
     @GetMapping
