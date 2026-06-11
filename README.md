@@ -1,360 +1,237 @@
 # CRM Ticketing API
 
-A Spring Boot REST API for managing CRM tickets, agents, and comments.
+A Spring Boot 3 CRM Ticketing API built using Hibernate ORM, MySQL, Apache Kafka, Redis, Caffeine Cache, and a custom LRU Cache implementation.
 
-## Tech Stack
+## Features
 
-- Java 21
-- Spring Boot 3
-- Hibernate ORM
-- SessionFactory
-- HikariCP Connection Pool
-- MySQL
-- Lombok
-- Swagger / OpenAPI
-- SLF4J
-- Logback
-- Maven
+### Ticket Management
+
+* Create Ticket
+* Update Ticket
+* Delete Ticket
+* Get Ticket By ID
+* Get All Tickets
+
+### Agent Management
+
+* Create Agent
+* Update Agent
+* Delete Agent
+* Get Agent By ID
+* Get All Agents
+
+### Comment Management
+
+* Create Comment
+* Update Comment
+* Delete Comment
+* Get Comment By ID
+* Get All Comments
 
 ---
 
-## Project Architecture
+## Event Driven Architecture (Kafka)
 
+The application publishes ticket events to Kafka whenever a ticket is created or updated.
+
+### Kafka Producer
+
+Publishes events to:
+
+```text
+ticket-topic
 ```
-Controller
-    ↓
-Service
-    ↓
+
+### Kafka Consumer
+
+Consumes events from:
+
+```text
+ticket-topic
+```
+
+and stores them in the Ticket History table.
+
+---
+
+## Ticket History Tracking
+
+A dedicated history table stores all ticket events consumed from Kafka.
+
+### Stored Information
+
+* Ticket ID
+* Action (CREATE / UPDATE)
+* Title
+* Status
+* Priority
+* Assigned Agent ID
+* Event Timestamp
+
+This provides a complete audit trail of ticket activity.
+
+---
+
+## Caching Strategy
+
+The application implements multiple caching strategies.
+
+### Redis Cache
+
+Used for Ticket fetch operations.
+
+#### Cache Flow
+
+```text
+Redis Cache
+    ↓ miss
 DAO
     ↓
-Hibernate SessionFactory
-    ↓
-HikariCP
-    ↓
-MySQL Database
+Redis Cache Update
 ```
+
+#### Applied On
+
+* TicketService.findById()
+* TicketService.create()
+* TicketService.update()
+* TicketService.delete()
+
+---
+
+### Caffeine Cache
+
+Used for fetching all tickets.
+
+#### Applied On
+
+```java
+TicketService.findAll()
+```
+
+#### Cache Flow
+
+```text
+Caffeine Cache
+    ↓ miss
+DAO
+```
+
+---
+
+### Custom LRU Cache
+
+A custom Least Recently Used (LRU) cache implementation is used for Agent fetch operations.
+
+#### Applied On
+
+```java
+AgentService.findById()
+```
+
+#### Cache Flow
+
+```text
+LRU Cache
+    ↓ miss
+DAO
+```
+
+---
+
+## Technology Stack
+
+### Backend
+
+* Java 21
+* Spring Boot 3
+* Hibernate ORM
+* MySQL
+
+### Messaging
+
+* Apache Kafka
+
+### Caching
+
+* Redis
+* Caffeine
+* Custom LRU Cache
+
+### Documentation
+
+* Swagger / OpenAPI
+
+### Build Tool
+
+* Maven
 
 ---
 
 ## Project Structure
 
-```
+```text
 src/main/java/com/arpit/crm_ticketing_api
 
+├── cache
+│   ├── CacheConfig
+│   ├── LruCache
+│   └── RedisCacheService
+│
 ├── config
 │   ├── DataSourceConfig
-│   └── HibernateConfig
+│   ├── HibernateConfig
+│   └── RedisConfig
 │
 ├── controller
-│   ├── AgentController
-│   ├── TicketController
-│   └── CommentController
 │
 ├── dao
 │   ├── AgentDao
+│   ├── CommentDao
 │   ├── TicketDao
-│   └── CommentDao
+│   └── TicketHistoryDao
 │
 ├── dto
-│   ├── AgentRequest
-│   ├── AgentResponse
-│   ├── TicketRequest
-│   ├── TicketResponse
-│   ├── CommentRequest
-│   └── CommentResponse
 │
 ├── entity
 │   ├── Agent
+│   ├── Comment
 │   ├── Ticket
-│   └── Comment
+│   └── TicketHistory
 │
-├── enums
-│   ├── Department
-│   ├── Priority
-│   └── TicketStatus
-│
-├── exception
-│   └── ResourceNotFoundException
+├── kafka
+│   ├── producer
+│   │   └── TicketProducer
+│   └── consumer
+│       └── TicketConsumer
 │
 ├── service
-│   ├── AgentService
-│   ├── TicketService
-│   └── CommentService
 │
-└── CrmTicketingApiApplication
+└── exception
 ```
 
 ---
 
-## Features
+## API Documentation
 
-### Agent Management
+Swagger UI:
 
-- Create Agent
-- Get Agent By Id
-- Get All Agents
-- Update Agent
-- Delete Agent
+```text
+http://localhost:8080/swagger-ui.html
+```
 
-### Ticket Management
+OpenAPI Docs:
 
-- Create Ticket
-- Get Ticket By Id
-- Get All Tickets
-- Update Ticket
-- Delete Ticket
-
-### Comment Management
-
-- Create Comment
-- Get Comment By Id
-- Get All Comments
-- Delete Comment
-
----
-
-## Concepts Implemented
-
-### 1. Enums
-
-Used for:
-
-- Department
-- Priority
-- TicketStatus
-
-Example:
-
-```java
-@Enumerated(EnumType.STRING)
-private TicketStatus status;
+```text
+http://localhost:8080/v3/api-docs
 ```
 
 ---
 
-### 2. Validation
-
-Request DTO validations using Jakarta Validation.
-
-Examples:
-
-```java
-@NotBlank
-@NotNull
-@Email
-```
-
----
-
-### 3. Service Layer
-
-Business logic is separated from controllers.
-
-Example:
-
-```java
-AgentController
-    ↓
-AgentService
-    ↓
-AgentDao
-```
-
----
-
-### 4. Swagger Documentation
-
-Swagger UI available at:
-
-```
-http://localhost:8080/swagger-ui/index.html
-```
-
-Used for API testing and documentation.
-
----
-
-### 5. Logging
-
-Implemented using:
-
-- SLF4J
-- Logback
-
-Example:
-
-```java
-private static final Logger logger =
-        LoggerFactory.getLogger(TicketService.class);
-```
-
-Configuration:
-
-```
-src/main/resources/logback.xml
-```
-
----
-
-### 6. Database Indexes
-
-Indexes added for faster queries.
-
-Example:
-
-```java
-@Table(
-    name = "tickets",
-    indexes = {
-        @Index(name = "idx_ticket_status",
-               columnList = "status"),
-        @Index(name = "idx_ticket_priority",
-               columnList = "priority")
-    }
-)
-```
-
----
-
-### 7. Hibernate
-
-Used Hibernate SessionFactory instead of Spring Data JPA repositories.
-
-Example:
-
-```java
-Session session =
-        sessionFactory.getCurrentSession();
-```
-
----
-
-### 8. HikariCP
-
-Used for database connection pooling.
-
-Configured in:
-
-```java
-DataSourceConfig
-```
-
-Benefits:
-
-- Faster database access
-- Connection reuse
-- Better performance
-
----
-
-### 9. Lombok
-
-Used to reduce boilerplate code.
-
-Annotations used:
-
-```java
-@Getter
-@Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@RequiredArgsConstructor
-```
-
----
-
-### 10. Constructor Injection
-
-Used constructor injection with Lombok.
-
-Example:
-
-```java
-@RequiredArgsConstructor
-@Service
-public class AgentService {
-
-    private final AgentDao agentDao;
-}
-```
-
-No field injection using `@Autowired`.
-
----
-
-## Database Configuration
-
-Update `application.properties`:
-
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/crm_ticketing_db
-spring.datasource.username=your_username
-spring.datasource.password=your_password
-```
-
----
-
-## Running the Application
-
-### Clone Repository
-
-```bash
-git clone https://github.com/arpit315/arpit_crm_ticket_api.git
-```
-
-### Run Application
-
-```bash
-mvn spring-boot:run
-```
-
-or run:
-
-```
-CrmTicketingApiApplication.java
-```
-
-from IntelliJ.
-
----
-
-## API Endpoints
-
-### Agents
-
-| Method | Endpoint |
-|----------|----------|
-| POST | /api/agents |
-| GET | /api/agents |
-| GET | /api/agents/{id} |
-| PUT | /api/agents/{id} |
-| DELETE | /api/agents/{id} |
-
-### Tickets
-
-| Method | Endpoint |
-|----------|----------|
-| POST | /api/tickets |
-| GET | /api/tickets |
-| GET | /api/tickets/{id} |
-| PUT | /api/tickets/{id} |
-| DELETE | /api/tickets/{id} |
-
-### Comments
-
-| Method | Endpoint |
-|----------|----------|
-| POST | /api/comments |
-| GET | /api/comments |
-| GET | /api/comments/{id} |
-| DELETE | /api/comments/{id} |
-
----
-
-## Author
-
-**Arpit Kumar**
-
-B.Tech Computer Science Engineering  
-Lovely Professional University
+## Future Enhancements
+
+* Redis Cluster Support
+* Kafka Dead Letter Queue (DLQ)
+* Distributed Tracing
+* Metrics and Monitoring
+* Spring Security & JWT Authentication
