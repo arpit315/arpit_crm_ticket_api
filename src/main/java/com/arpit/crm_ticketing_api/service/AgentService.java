@@ -5,6 +5,7 @@ import com.arpit.crm_ticketing_api.dto.AgentRequest;
 import com.arpit.crm_ticketing_api.dto.AgentResponse;
 import com.arpit.crm_ticketing_api.entity.Agent;
 import com.arpit.crm_ticketing_api.exception.ResourceNotFoundException;
+import com.arpit.crm_ticketing_api.cache.LruCache;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AgentService {
     private static final Logger log = LoggerFactory.getLogger(AgentService.class);
-
+    private final LruCache<Long, AgentResponse> lruCache;
     private final AgentDao agentDao;
 
     public AgentResponse create(AgentRequest request) {
@@ -31,6 +32,7 @@ public class AgentService {
             agent.setEmail(request.getEmail());
             agent.setDepartment(request.getDepartment());
             return toResponse(agentDao.save(agent));
+
         } catch (Exception e) {
             log.error("Failed to create agent", e);
             throw e;
@@ -48,22 +50,46 @@ public class AgentService {
     }
 
     public AgentResponse findById(Long id) {
+
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("Agent id must be a positive number");
         }
 
         try {
-            Agent agent = agentDao.findById(id);
-            if (agent == null) {
-                throw new ResourceNotFoundException("Agent not found with id: " + id);
+
+            if (lruCache.containsKey(id)) {
+
+                log.info("Returning agent from LRU cache. id={}", id);
+
+                return lruCache.get(id);
             }
-            log.info("Fetched agent with id={}", id);
-            return toResponse(agent);
+
+            log.info("LRU cache miss. Fetching agent from DB. id={}", id);
+
+            Agent agent = agentDao.findById(id);
+
+            if (agent == null) {
+                throw new ResourceNotFoundException(
+                        "Agent not found with id: " + id
+                );
+            }
+
+            AgentResponse response = toResponse(agent);
+
+            lruCache.put(id, response);
+
+            return response;
+
         } catch (ResourceNotFoundException e) {
+
             log.error("Agent not found with id={}", id, e);
+
             throw e;
+
         } catch (Exception e) {
+
             log.error("Failed to fetch agent with id={}", id, e);
+
             throw e;
         }
     }
@@ -85,7 +111,13 @@ public class AgentService {
             existing.setEmail(request.getEmail());
             existing.setDepartment(request.getDepartment());
             log.info("Updating agent with id={}", id);
-            return toResponse(agentDao.update(existing));
+
+            AgentResponse response =
+                    toResponse(agentDao.update(existing));
+
+            lruCache.put(id, response);
+
+            return response;
         } catch (ResourceNotFoundException e) {
             log.error("Agent update failed for id={}", id, e);
             throw e;
@@ -103,6 +135,7 @@ public class AgentService {
         try {
             log.info("Deleting agent with id={}", id);
             agentDao.delete(id);
+            lruCache.remove(id);
         } catch (Exception e) {
             log.error("Failed to delete agent with id={}", id, e);
             throw e;
