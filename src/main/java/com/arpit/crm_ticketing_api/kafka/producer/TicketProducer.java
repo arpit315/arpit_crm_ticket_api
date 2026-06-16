@@ -1,6 +1,6 @@
 package com.arpit.crm_ticketing_api.kafka.producer;
 
-import com.arpit.crm_ticketing_api.dto.TicketEvent;
+import com.arpit.crm_ticketing_api.kafka.event.TicketEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;

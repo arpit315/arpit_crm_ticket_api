@@ -3,7 +3,7 @@ package com.arpit.crm_ticketing_api.service;
 import com.arpit.crm_ticketing_api.cache.RedisCacheService;
 import com.arpit.crm_ticketing_api.dao.AgentDao;
 import com.arpit.crm_ticketing_api.dao.TicketDao;
-import com.arpit.crm_ticketing_api.dto.TicketEvent;
+import com.arpit.crm_ticketing_api.kafka.event.TicketEvent;
 import com.arpit.crm_ticketing_api.entity.Agent;
 import com.arpit.crm_ticketing_api.entity.Ticket;
 import com.arpit.crm_ticketing_api.exception.ResourceNotFoundException;

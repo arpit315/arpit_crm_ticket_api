@@ -1,6 +1,11 @@
-package com.arpit.crm_ticketing_api.dto;
+package com.arpit.crm_ticketing_api.kafka.event;
 
-import lombok.*;
+
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
@@ -9,14 +14,9 @@ import lombok.*;
 public class TicketEvent {
 
     private Long ticketId;
-
     private String action;
-
     private String title;
-
     private String status;
-
     private String priority;
-
     private Long assignedAgentId;
 }
