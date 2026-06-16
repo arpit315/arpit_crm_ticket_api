@@ -1,7 +1,7 @@
 package com.arpit.crm_ticketing_api.kafka.consumer;
 
 import com.arpit.crm_ticketing_api.dao.TicketHistoryDao;
-import com.arpit.crm_ticketing_api.dto.TicketEvent;
+import com.arpit.crm_ticketing_api.kafka.event.TicketEvent;
 import com.arpit.crm_ticketing_api.entity.TicketHistory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

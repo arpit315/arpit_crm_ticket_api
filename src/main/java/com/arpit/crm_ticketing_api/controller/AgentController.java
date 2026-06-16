@@ -1,7 +1,6 @@
 package com.arpit.crm_ticketing_api.controller;
 
-import com.arpit.crm_ticketing_api.dto.AgentRequest;
-import com.arpit.crm_ticketing_api.dto.AgentResponse;
+import com.arpit.crm_ticketing_api.entity.Agent;
 import com.arpit.crm_ticketing_api.service.AgentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,31 +14,48 @@ import java.util.List;
 @RequestMapping("/api/agents")
 @RequiredArgsConstructor
 public class AgentController {
+
     private final AgentService agentService;
 
     @PostMapping
-    public ResponseEntity<AgentResponse> create(@Valid @RequestBody AgentRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(agentService.create(request));
+    public ResponseEntity<Agent> create(
+            @Valid @RequestBody Agent agent) {
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(agentService.create(agent));
     }
 
     @GetMapping
-    public ResponseEntity<List<AgentResponse>> findAll() {
+    public ResponseEntity<List<Agent>> findAll() {
         return ResponseEntity.ok(agentService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AgentResponse> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(agentService.findById(id));
+    public ResponseEntity<Agent> findById(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                agentService.findById(id)
+        );
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<AgentResponse> update(@PathVariable Long id, @Valid @RequestBody AgentRequest request) {
-        return ResponseEntity.ok(agentService.update(id, request));
+    @PostMapping("/update/{id}")
+    public ResponseEntity<Agent> update(
+            @PathVariable Long id,
+            @Valid @RequestBody Agent agent) {
+
+        return ResponseEntity.ok(
+                agentService.update(id, agent)
+        );
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id) {
+
         agentService.delete(id);
+
         return ResponseEntity.noContent().build();
     }
 }
