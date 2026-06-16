@@ -40,10 +40,12 @@ public class CommentService {
             log.info("Creating comment for ticketId={} by agentId={}", request.getTicketId(), request.getAgentId());
             Ticket ticket = ticketDao.findById(request.getTicketId());
             if (ticket == null) {
+                log.warn("Comment creation failed because ticket {} was not found", request.getTicketId());
                 throw new ResourceNotFoundException("Ticket not found with id: " + request.getTicketId());
             }
             Agent agent = agentDao.findById(request.getAgentId());
             if (agent == null) {
+                log.warn("Comment creation failed because agent {} was not found", request.getAgentId());
                 throw new ResourceNotFoundException("Agent not found with id: " + request.getAgentId());
             }
             Comment comment = new Comment();

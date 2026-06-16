@@ -32,7 +32,7 @@ public class AgentController {
         return ResponseEntity.ok(agentService.findById(id));
     }
 
-    @PutMapping("/{id}")
+    @PostMapping("/update/{id}")
     public ResponseEntity<AgentResponse> update(@PathVariable Long id, @Valid @RequestBody AgentRequest request) {
         return ResponseEntity.ok(agentService.update(id, request));
     }

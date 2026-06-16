@@ -69,9 +69,8 @@ public class AgentService {
             Agent agent = agentDao.findById(id);
 
             if (agent == null) {
-                throw new ResourceNotFoundException(
-                        "Agent not found with id: " + id
-                );
+                log.warn("Agent not found with id={}", id);
+                throw new ResourceNotFoundException("Agent not found with id: " + id);
             }
 
             AgentResponse response = toResponse(agent);
@@ -105,6 +104,7 @@ public class AgentService {
         try {
             Agent existing = agentDao.findById(id);
             if (existing == null) {
+                log.warn("Agent update skipped because id={} was not found", id);
                 throw new ResourceNotFoundException("Agent not found with id: " + id);
             }
             existing.setName(request.getName());

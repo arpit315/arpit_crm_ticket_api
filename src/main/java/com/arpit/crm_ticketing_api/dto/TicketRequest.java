@@ -11,17 +11,17 @@ import lombok.Setter;
 @Getter
 @Setter
 public class TicketRequest {
-    @NotBlank
-    @Size(min = 3, max = 150)
+    @NotBlank(message = "Title must not be blank")
+    @Size(min = 3, max = 150, message = "Title must be between 3 and 150 characters")
     private String title;
 
-    @Size(max = 1000)
+    @Size(max = 1000, message = "Description must not exceed 1000 characters")
     private String description;
 
-    @NotNull
+    @NotNull(message = "Priority is required")
     private Priority priority;
 
-    @NotNull
+    @NotNull(message = "Status is required")
     private TicketStatus status;
 
     private Long assignedAgentId;

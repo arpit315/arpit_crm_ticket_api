@@ -1,7 +1,6 @@
 package com.arpit.crm_ticketing_api.controller;
 
-import com.arpit.crm_ticketing_api.dto.TicketRequest;
-import com.arpit.crm_ticketing_api.dto.TicketResponse;
+import com.arpit.crm_ticketing_api.entity.Ticket;
 import com.arpit.crm_ticketing_api.service.TicketService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,31 +14,48 @@ import java.util.List;
 @RequestMapping("/api/tickets")
 @RequiredArgsConstructor
 public class TicketController {
+
     private final TicketService ticketService;
 
     @PostMapping
-    public ResponseEntity<TicketResponse> create(@Valid @RequestBody TicketRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(ticketService.create(request));
+    public ResponseEntity<Ticket> create(
+            @Valid @RequestBody Ticket ticket) {
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ticketService.create(ticket));
     }
 
     @GetMapping
-    public ResponseEntity<List<TicketResponse>> findAll() {
+    public ResponseEntity<List<Ticket>> findAll() {
         return ResponseEntity.ok(ticketService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TicketResponse> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(ticketService.findById(id));
+    public ResponseEntity<Ticket> findById(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                ticketService.findById(id)
+        );
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<TicketResponse> update(@PathVariable Long id, @Valid @RequestBody TicketRequest request) {
-        return ResponseEntity.ok(ticketService.update(id, request));
+    @PostMapping("/update/{id}")
+    public ResponseEntity<Ticket> update(
+            @PathVariable Long id,
+            @Valid @RequestBody Ticket ticket) {
+
+        return ResponseEntity.ok(
+                ticketService.update(id, ticket)
+        );
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id) {
+
         ticketService.delete(id);
+
         return ResponseEntity.noContent().build();
     }
 }

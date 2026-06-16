@@ -11,15 +11,15 @@ import lombok.Setter;
 @Getter
 @Setter
 public class AgentRequest {
-    @NotBlank
-    @Size(min = 2, max = 100)
+    @NotBlank(message = "Name must not be blank")
+    @Size(min = 3, max = 100, message = "Name must be between 3 and 100 characters")
     private String name;
 
-    @NotBlank
-    @Email
-    @Size(max = 150)
+    @NotBlank(message = "Email must not be blank")
+    @Email(message = "Invalid email format")
+    @Size(min = 4, max = 150, message = "Email must be between 4 and 150 characters")
     private String email;
 
-    @NotNull
+    @NotNull(message = "Department is required")
     private Department department;
 }
